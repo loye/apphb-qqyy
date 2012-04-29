@@ -51,6 +51,8 @@
     <Reference Include="System.EnterpriseServices" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="accounts.htm" />
+    <Content Include="default.htm" />
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
