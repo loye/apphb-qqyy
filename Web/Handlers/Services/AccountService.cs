@@ -28,18 +28,29 @@ namespace Loye.QQYY.Web.Handlers
             using (var model = new QQYYDataModel())
             {
                 accounts = model.Account
-                    .Where(item => item.Date > startDate && item.Date < endDate)
-                    .ToList()
+                    .Where(item => item.Date >= startDate && item.Date <= endDate)
                     .Select(item => new
                     {
                         id = item.Id,
-                        date = item.Date.Date.ToString("yyyy-MM-dd"),
+                        date = item.Date,
                         amount = item.Amount,
                         paymentTypeCode = item.PaymentTypeCode,
                         paymentType = item.PaymentType.Name,
                         userId = item.DraweeId,
                         user = item.User.Name,
                         comments = item.Comments,
+                    })
+                    .ToList()
+                    .Select(item => new
+                    {
+                        id = item.id,
+                        date = item.date.Date.ToString("yyyy-MM-dd"),
+                        amount = item.amount,
+                        paymentTypeCode = item.paymentTypeCode,
+                        paymentType = item.paymentType,
+                        userId = item.userId,
+                        user = item.user,
+                        comments = item.comments,
                     });
             }
             context.Response.WriteJson(new { success = true, data = accounts });
@@ -73,17 +84,28 @@ namespace Loye.QQYY.Web.Handlers
                 model.SaveChanges();
                 inserted = model.Account
                     .Where(item => item.SerialNumber == newAccount.SerialNumber)
-                    .ToList()
                     .Select(item => new
                     {
                         id = item.Id,
-                        date = item.Date.Date.ToString("yyyy-MM-dd"),
+                        date = item.Date,
                         amount = item.Amount,
                         paymentTypeCode = item.PaymentTypeCode,
                         paymentType = item.PaymentType.Name,
                         userId = item.DraweeId,
                         user = item.User.Name,
                         comments = item.Comments,
+                    })
+                    .ToList()
+                    .Select(item => new
+                    {
+                        id = item.id,
+                        date = item.date.Date.ToString("yyyy-MM-dd"),
+                        amount = item.amount,
+                        paymentTypeCode = item.paymentTypeCode,
+                        paymentType = item.paymentType,
+                        userId = item.userId,
+                        user = item.user,
+                        comments = item.comments,
                     })
                     .First();
             }
