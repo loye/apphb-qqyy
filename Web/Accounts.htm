@@ -1,0 +1,482 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>记账本</title>
+    <style type="text/css">
+        .page
+        {
+            margin: 0 5%;
+            font-family: verdana;
+            font-size: 12px;
+        }
+        .link_button
+        {
+            cursor: pointer;
+            margin: 1px 5px;
+            padding: 1px 1px;
+        }
+        .link_button:hover
+        {
+            font-weight: bold;
+        }
+        .list
+        {
+            list-style: none;
+            padding: 0;
+        }
+        .list input, .list select
+        {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        .list li
+        {
+            display: list-item;
+            overflow: hidden;
+            width: 100%;
+            border-bottom: 1px solid #CCCCCC;
+            clear: both;
+        }
+        .list li.header
+        {
+            background-color: #DDDDDD;
+            border-top: 1px solid #CCCCCC;
+            font-weight: bold;
+        }
+        .list li.body:hover, .list li.footer:hover
+        {
+            background-color: #EEEEEE;
+        }
+        .list li.edit
+        {
+            background-color: #F6F6F6;
+        }
+        .list li div
+        {
+            float: left;
+            margin: 0;
+            padding: 5px 5px 4px;
+        }
+        .list .cell_controller
+        {
+            width: 7%;
+            min-width: 70px;
+            text-align: center;
+        }
+        .list .cell_date, .list .cell_amount, .list .cell_paymenttype, .list .cell_user
+        {
+            width: 12%;
+        }
+        .list .cell_comments
+        {
+            width: 38%;
+        }
+        .list .footer
+        {
+            display: none;
+        }
+        .list .footer .cell_total span
+        {
+            padding-left: 5px;
+            padding-right: 15px;
+        }
+    </style>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script type="text/javascript">
+        var DATE_DROPDOWNLIST_COUNT = 14;
+        var USER_LIST = [{ id: 1, name: "求黎建" }, { id: 2, name: "姚玉"}];
+        var PAYMENT_TYPE_LIST = [{ code: "CS", name: "现金" }, { code: "CC", name: "信用卡"}];
+        (function ($) {
+            /*
+            var userService = {
+                select: function (onsuccess) {
+                    var src = this;
+                    $.ajax({
+                        url: '/services/user/select',
+                        type: 'get',
+                        success: function (data) { if (data.success) { src.list.userList = data.data; onsuccess(src, data.data); } }
+                    });
+                }
+            };
+            var paymentTypeSerivce = {
+                select: function (onsuccess) {
+                    var src = this;
+                    $.ajax({
+                        url: '/services/paymenttype/select',
+                        type: 'get',
+                        success: function (data) { if (data.success) { src.list.paymentTypeList = data.data; onsuccess(src, data.data); } }
+                    });
+                }
+            };
+            */
+            var accountService = {
+                select: function (args, onsuccess) {
+                    var src = this;
+                    $.ajax({
+                        url: '/services/account/select',
+                        type: 'post',
+                        data: args.data,
+                        success: function (data) {
+                            if (data.success) {
+                                src.accountList = data.data;
+                                onsuccess(src, data.data);
+                            } 
+                            else {
+                                console.log({ input: args.data, output: data});
+                            }
+                        }
+                    });
+                },
+                upsert: function (args, onsuccess) {
+                    var src = this;
+                    $.ajax({
+                        url: args.isInsert ? '/services/account/insert' : '/services/account/update',
+                        type: 'post',
+                        data: args.data,
+                        success: function (data) {
+                            if (data.success) {
+                                var account = data.data;
+                                var accountList = src.accountList;
+                                if (args.isInsert) {
+                                    accountList.push(account);
+                                } else {
+                                    for (var i = 0; i < accountList.length; i++) {
+                                        var item = accountList[i];
+                                        if (item.id == account.id) {
+                                            accountList[i] = account;
+                                            break;
+                                        }
+                                    }
+                                }
+                                onsuccess(src, { args: args, data: account});
+                            } 
+                            else {
+                                console.log({ input: args.data, output: data});
+                            }
+                        }
+                    });
+                },
+                delete: function (args, onsuccess) {
+                    var src = this;
+                    $.ajax({
+                        url: '/services/account/delete',
+                        type: 'post',
+                        data: args.data,
+                        success: function (data) {
+                            if (data.success) {
+                                var account = data.data;
+                                var accountList = src.accountList;
+                                var tempIndex = -1;
+                                for (var i = 0; i < accountList.length; i++) {
+                                    if (tempIndex >= 0) {
+                                        accountList[i-1] = accountList[i];
+                                    } else if (account.id == accountList[i].id) {
+                                        tempIndex = i;
+                                    }
+                                }
+                                accountList.pop();
+                                onsuccess(src, { args: args, data: data.data });
+                            } 
+                            else {
+                                console.log({ input: args.data, output: data});
+                            }
+                        }
+                    });
+                }
+            };
+
+            var Page = function () {
+                this.list = {
+                    $html: $('ul.list'),
+                    searchBar: {
+                        $html: $('.searchbar'),
+                        val: function (name, value) {
+                            var src = this.$html.find('input[name="' + name + '"]');
+                            if (value == undefined) {
+                                return src.val();
+                            }
+                            else {
+                                return src.val(value);
+                            }
+                        },
+                        getObject: function () {
+                            return { startDate: this.val('startDate'), endDate: this.val('endDate') };
+                        }
+                    },
+                    accountList: [],
+                    total: { total: 0 },
+                    refresh: function (args) {
+                        args = args ? args : {};
+                        this.$html.find('li.footer').hide('slow');
+                        this.$html.find('li.body').hide('slow').remove();
+                        accountService.select.call(this, { data: { startDate: args.startDate, endDate: args.endDate} },
+                            function (src, data) {
+                                var accountList = src.accountList;
+                                for (var i = 0; accountList && i < accountList.length; i++) {
+                                    var $view = createViewItem(accountList[i]);
+                                    src.$html.find('li.footer').before($view);
+                                    $view.show('slow');
+                                }
+                                src.refreshTotal();
+                                src.$html.find('li.footer').show('slow');
+                            });
+                    },
+                    refreshTotal: function () {
+                        var total = { total: 0 }, accountList = this.accountList;
+                        for (var i = 0; accountList && i < accountList.length; i++) {
+                            var item = accountList[i];
+                            total.total += item.amount;
+                            if (!total['total_' + item.paymentTypeCode]) {
+                                total['total_' + item.paymentTypeCode] = 0;
+                            }
+                            if (!total['total_' + item.userId]) {
+                                total['total_' + item.userId] = 0;
+                            }
+                            total['total_' + item.paymentTypeCode] += item.amount;
+                            total['total_' + item.userId] += item.amount;
+                        }
+                        var $total = this.$html.find('.footer .cell_total');
+                        $total.empty();
+                        $total.append('总计金额:<span>' + total.total + '</span>');
+                        if (total.total > 0) {
+                            for (var i = 0; i < PAYMENT_TYPE_LIST.length; i++) {
+                                var item = PAYMENT_TYPE_LIST[i];
+                                var value = total['total_' + item.code];
+                                value = value ? value : 0;
+                                $total.append(item.name + ':<span>' + value + '</span>');
+                            }
+                            for (var i = 0; i < USER_LIST.length; i++) {
+                                var item = USER_LIST[i];
+                                var value = total['total_' + item.id];
+                                value = value ? value : 0;
+                                $total.append(item.name + ':<span>' + value + '</span>');
+                            }
+                        }
+                    }
+                };
+                this.init = function () {
+                    var searchBar = this.list.searchBar;
+                    var today = new Date();
+                    searchBar.val('startDate', getDateString(getOffsetDate(today, -1)));
+                    searchBar.val('endDate', getDateString(today));
+
+                    this.list.refresh(searchBar.getObject());
+                    searchBar.$html.find('#searchBtn').on('click', { list: this.list }, function (evt) {
+                        var list = evt.data.list;
+                        list.refresh(list.searchBar.getObject());
+                    });
+
+                    this.list.$html.on('click', 'a.link_button', { list: this.list }, function (evt) {
+                        $src = $(evt.srcElement);
+                        var action = $src.attr('name');
+
+                        if (action == 'add') {
+                            var $cur = $src.parents('li').eq(0);
+                            var $edit = createEditItem();
+                            $cur.before($edit);
+                            $edit.show('slow');
+
+                        } else if (action == 'edit') {
+                            var $cur = $src.parents('li').eq(0);
+                            var item = {
+                                id: $cur.attr('data-id'),
+                                date: $cur.find('.cell_date').attr('data-date'),
+                                amount: $cur.find('.cell_amount').attr('data-amount'),
+                                paymentTypeCode: $cur.find('.cell_paymenttype').attr('data-paymentTypeCode'),
+                                userId: $cur.find('.cell_user').attr('data-userId'),
+                                comments: $cur.find('.cell_comments').attr('data-comments')
+                            };
+                            var $edit = createEditItem(item);
+                            $cur.after($edit);
+                            $cur.hide('slow', function () {
+                                $edit.show('slow');
+                            });
+
+                        } else if (action == 'cancel') {
+                            var $cur = $src.parents('li').eq(0);
+                            var $view = $cur.prev();
+                            $cur.hide('slow', function () { $cur.remove(); });
+                            $view.show('slow');
+
+                        } else if (action == 'save') {
+                            var $cur = $src.parents('li').eq(0);
+                            var item = {
+                                id: $cur.attr('data-id'),
+                                date: $cur.find('[name="date"]').val(),
+                                amount: $cur.find('[name="amount"]').val(),
+                                paymentTypeCode: $cur.find('[name="paymentType"]').val(),
+                                userId: $cur.find('[name="user"]').val(),
+                                comments: $cur.find('[name="comments"]').val()
+                            };
+                            // save insert or update
+                            var isInsert = item.id ? false : true;
+                            accountService.upsert.call(evt.data.list, { isInsert: isInsert, $cur: $cur, data: item }, function (src, data) {
+                                var $cur = data.args.$cur;
+                                var isInsert = data.args.isInsert;
+                                var account = data.data;
+                                if (!isInsert) {
+                                    $cur.prev().remove();
+                                }
+                                var $view = createViewItem(account);
+                                $cur.before($view);
+                                $cur.hide('slow', function () {
+                                    $cur.remove();
+                                    $view.show('slow');
+                                });
+                            });
+
+                        } else if (action == 'delete') {
+                            if (window.confirm('确定要删除吗？')) {
+                                var $cur = $src.parents('li').eq(0);
+                                var item = {
+                                    id: $cur.attr('data-id')
+                                };
+                                // delete
+                                accountService.delete.call(evt.data.list, { $cur: $cur, data: item }, function (src, data) {
+                                    data.args.$cur.hide('slow', function () { $cur.remove(); });
+                                });
+                            }
+                        }
+                    });
+                    return this;
+                }; // init end
+
+                // private functions
+                function createViewItem(item) {
+                    var $html = $(
+                    '<li class="body" style="display:none" data-id="' + item.id + '">'
+                        + '<div class="cell_controller">'
+                            + '<a name="edit" class="link_button">编辑</a><a name="delete" class="link_button">删除</a></div>'
+                        + '<div class="cell_date" data-date="' + item.date + '">' + item.date + '</div>'
+                        + '<div class="cell_amount" data-amount="' + item.amount + '">' + item.amount + '</div>'
+                        + '<div class="cell_paymenttype" data-paymentTypeCode="' + item.paymentTypeCode + '">' + item.paymentType + '</div>'
+                        + '<div class="cell_user" data-userId="' + item.userId + '">' + item.user + '</div>'
+                        + '<div class="cell_comments" data-comments="' + item.comments + '">' + item.comments + '</div>'
+                    + '</li>');
+                    return $html;
+                };
+
+                function createEditItem(item) {
+                    var $html = $('<li class="body edit" style="display:none"></li>')
+                        .append($('<div class="cell_controller"><a name="save" class="link_button">保存</a><a name="cancel" class="link_button">取消</a></div>'))
+                        .append($('<div class="cell_date"></div>').append(createEditControl_Date()))
+                        .append($('<div class="cell_amount"><input name="amount" type="text" /></div>'))
+                        .append($('<div class="cell_paymenttype"></div>').append(createEditControl_PaymentType()))
+                        .append($('<div class="cell_user"></div>').append(createEditControl_User()))
+                        .append($('<div class="cell_comments"><input name="comments" type="text" /></div>'));
+                    if (item) {
+                        if (item.id) {
+                            $html.attr('data-id', item.id);
+                        }
+                        if (item.date) {
+                            $html.find('[name="date"]').val(item.date);
+                        }
+                        if (item.amount) {
+                            $html.find('[name="amount"]').val(item.amount);
+                        }
+                        if (item.paymentTypeCode) {
+                            $html.find('[name="paymentType"]').val(item.paymentTypeCode);
+                        }
+                        if (item.userId) {
+                            $html.find('[name="user"]').val(item.userId);
+                        }
+                        if (item.comments) {
+                            $html.find('[name="comments"]').val(item.comments);
+                        }
+                    }
+                    return $html;
+                }
+
+                function createEditControl_Date() {
+                    var $html = $(
+                    '<select name="date"></select>');
+                    var today = new Date();
+                    var count = DATE_DROPDOWNLIST_COUNT * -1;
+                    for (var i = 0; i > count; i--) {
+                        var dateString = getDateString(getOffsetDate(today, i));
+                        $html.append('<option value="' + dateString + '">' + dateString + '</option>');
+                    }
+                    return $html;
+                }
+
+                function createEditControl_PaymentType() {
+                    var $html = $('<select name="paymentType"></select>');
+                    for (var i = 0; i < PAYMENT_TYPE_LIST.length; i++) {
+                        $html.append($('<option value="' + PAYMENT_TYPE_LIST[i].code + '">' + PAYMENT_TYPE_LIST[i].name + '</option>'));
+                    }
+                    return $html;
+                }
+
+                function createEditControl_User() {
+                    var $html = $('<select name="user"></select>');
+                    for (var i = 0; i < USER_LIST.length; i++) {
+                        $html.append($('<option value="' + USER_LIST[i].id + '">' + USER_LIST[i].name + '</option>'));
+                    }
+                    return $html;
+                }
+
+                function getDateString(date) {
+                    date = date ? date : new Date();
+                    var yyyy = date.getFullYear().toString();
+                    var M = (date.getMonth() + 1).toString();
+                    var MM = M.length == 1 ? '0' + M : M;
+                    var d = date.getDate().toString();
+                    var dd = d.length == 1 ? '0' + d : d;
+                    return yyyy + '-' + MM + '-' + dd;
+                }
+
+                function getOffsetDate(date, offset) {
+                    date = date ? date : new Date();
+                    offset = offset ? offset : 0;
+                    var newDate = new Date();
+                    newDate.setTime(date.getTime() + 86400000 * offset);
+                    return newDate;
+                }
+            }; // page end
+
+
+            $(function () {
+                var page = window.page = new Page().init();
+            });
+        })(window.jQuery); 
+    </script>
+</head>
+<body>
+    <div class="page">
+        <div>
+            <div class="searchbar">
+                <span>起始日期:</span><input name="startDate" />
+                &nbsp; <span>结束日期:</span><input name="endDate" />
+                &nbsp;
+                <button id="searchBtn">
+                    &nbsp;搜&nbsp;&nbsp;索&nbsp;</button>
+            </div>
+            <ul class="list">
+                <li class="header">
+                    <div class="cell_controller">
+                        &nbsp;
+                    </div>
+                    <div class="cell_date">
+                        日期</div>
+                    <div class="cell_amount">
+                        金额（元）</div>
+                    <div class="cell_paymenttype">
+                        支付类型</div>
+                    <div class="cell_user">
+                        用户</div>
+                    <div class="cell_comments">
+                        备注</div>
+                </li>
+                <li class="footer">
+                    <div class="cell_controller">
+                        <a class="link_button" name="add">点击添加</a>
+                    </div>
+                    <div class="cell_total">
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
