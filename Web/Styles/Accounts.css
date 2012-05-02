@@ -1,0 +1,82 @@
+﻿.page
+{
+    margin: 0 5%;
+    font-family: verdana;
+    font-size: 12px;
+}
+.link_button
+{
+    cursor: pointer;
+    margin: 1px 5px;
+    padding: 1px 1px;
+}
+.link_button:hover
+{
+    font-weight: bold;
+}
+.link_button:active
+{
+    background-color: #BBBBBB;
+}
+.list
+{
+    list-style: none;
+    padding: 0;
+}
+.list input, .list select
+{
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+.list li
+{
+    display: list-item;
+    overflow: hidden;
+    width: 100%;
+    border-bottom: 1px solid #CCCCCC;
+    clear: both;
+}
+.list li.header
+{
+    background-color: #DDDDDD;
+    border-top: 1px solid #CCCCCC;
+    font-weight: bold;
+}
+.list li.body:hover, .list li.footer:hover
+{
+    background-color: #EEEEEE;
+}
+.list li.edit
+{
+    background-color: #F6F6F6;
+}
+.list li div
+{
+    float: left;
+    margin: 0;
+    padding: 5px 5px 4px;
+}
+.list .cell_controller
+{
+    width: 7%;
+    min-width: 70px;
+    text-align: center;
+}
+.list .cell_date, .list .cell_amount, .list .cell_paymenttype, .list .cell_user
+{
+    width: 12%;
+}
+.list .cell_comments
+{
+    width: 38%;
+}
+.list .footer
+{
+    display: none;
+}
+.list .footer .cell_total span
+{
+    padding-left: 5px;
+    padding-right: 15px;
+}
