@@ -88,7 +88,7 @@ namespace Loye.QQYY.Web.Handlers
                 model.SaveChanges();
                 updated = SearchAccount(model.Account, item => item.Id == account.Id).First();
             }
-            context.Response.WriteJson(new { success = true, data = new { id = 1, } });
+            context.Response.WriteJson(new { success = true, data = updated });
         }
 
         public override void Delete(HttpContext context)
