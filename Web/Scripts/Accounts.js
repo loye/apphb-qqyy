@@ -183,9 +183,20 @@ var PAYMENT_TYPE_LIST = [{ code: "CS", name: "现金" }, { code: "CC", name: "�
             searchBar.val('endDate', getDateString(today));
 
             this.list.refresh(searchBar.getFilter());
+
             searchBar.$html.find('#searchBtn').on('click', { list: this.list }, function (evt) {
                 var list = evt.data.list;
                 list.refresh(list.searchBar.getFilter());
+            });
+
+            searchBar.$html.find('.date').on('mousewheel', function(evt){
+                var offset = evt.originalEvent.wheelDelta > 0 ? 1 : -1;
+                var $src = $(evt.srcElement);
+                var curDate = tryParseDate($src.val());
+                if (curDate) {
+                    var newDate = getOffsetDate(curDate, offset);
+                    $src.val(getDateString(newDate));
+                }
             });
 
             this.list.$html.on('click', 'a.link_button', { list: this.list }, function (evt) {
@@ -356,6 +367,15 @@ var PAYMENT_TYPE_LIST = [{ code: "CS", name: "现金" }, { code: "CC", name: "�
             var newDate = new Date();
             newDate.setTime(date.getTime() + 86400000 * offset);
             return newDate;
+        }
+
+        function tryParseDate(str) {
+            var tick = Date.parse(str);
+            if (tick) {
+                return new Date(tick);
+            }else {
+                return undefined;
+            }
         }
     }; // page end
 
