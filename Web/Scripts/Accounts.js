@@ -191,12 +191,16 @@ var PAYMENT_TYPE_LIST = [{ code: "CS", name: "现金" }, { code: "CC", name: "�
             this.list.$html.on('click', 'a.link_button', { list: this.list }, function (evt) {
                 var $src = $(evt.srcElement);
                 var $cur = $src.parents('li').eq(0);
+                var a = $cur.find('a');
+                a.prop({ disabled: true });
+                setTimeout(3000, function() { a.prop({ disabled: false }); });
                 var action = $src.attr('name');
 
                 if (action == 'add') {
                     var $edit = createEditItem();
                     $cur.before($edit);
                     $edit.show('slow');
+                    a.prop({ disabled: false });
 
                 } else if (action == 'edit') {
                     var item = {
@@ -211,7 +215,8 @@ var PAYMENT_TYPE_LIST = [{ code: "CS", name: "现金" }, { code: "CC", name: "�
                     $cur.after($edit);
                     $cur.hide('slow', function () {
                         $edit.show('slow');
-                    });
+                        a.prop({ disabled: false });
+                    });                    
 
                 } else if (action == 'cancel') {
                     var $view = $cur.prev();
@@ -253,6 +258,8 @@ var PAYMENT_TYPE_LIST = [{ code: "CS", name: "现金" }, { code: "CC", name: "�
                             $cur.hide('slow', function () { $cur.remove(); });
                             src.refreshTotal();
                         });
+                    } else {
+                        a.prop({ disabled: false });
                     }
                 }
             });
