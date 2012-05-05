@@ -240,6 +240,7 @@ var PAYMENT_TYPE_LIST = [{ code: "CS", name: "现金" }, { code: "CC", name: "�
                             $cur.remove();
                             $view.show('slow');
                         });
+                        src.refreshTotal();
                     });
 
                 } else if (action == 'delete') {
@@ -250,6 +251,7 @@ var PAYMENT_TYPE_LIST = [{ code: "CS", name: "现金" }, { code: "CC", name: "�
                         // delete
                         accountService.delete.call(evt.data.list, { data: item }, function (src, data) {
                             $cur.hide('slow', function () { $cur.remove(); });
+                            src.refreshTotal();
                         });
                     }
                 }
