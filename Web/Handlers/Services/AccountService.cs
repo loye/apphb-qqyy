@@ -101,6 +101,7 @@ namespace Loye.QQYY.Web.Handlers
             {
                 var account = model.Account.First(item => item.Id == id);
                 model.Account.DeleteObject(account);
+                model.SaveChanges();
             }
             context.Response.WriteJson(new { success = true, data = new { id = id, } });
         }
