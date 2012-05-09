@@ -197,6 +197,7 @@ var PAYMENT_TYPE_LIST = [{ code: "CS", name: "现金" }, { code: "CC", name: "�
                     var newDate = getOffsetDate(curDate, offset);
                     $src.val(getDateString(newDate));
                 }
+                evt.preventDefault();
             });
 
             this.list.$html.on('click', 'a.link_button', { list: this.list }, function (evt) {
