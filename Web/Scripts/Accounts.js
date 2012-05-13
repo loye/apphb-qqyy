@@ -147,30 +147,31 @@ var PAYMENT_TYPE_LIST = [{ code: "CS", name: "现金" }, { code: "CC", name: "�
                 var total = { total: 0 }, accountList = this.accountList;
                 for (var i = 0; accountList && i < accountList.length; i++) {
                     var item = accountList[i];
-                    total.total += item.amount;
+                    var amount = item.amount * 100;
+                    total.total += amount;
                     if (!total['total_' + item.paymentTypeCode]) {
                         total['total_' + item.paymentTypeCode] = 0;
                     }
                     if (!total['total_' + item.userId]) {
                         total['total_' + item.userId] = 0;
                     }
-                    total['total_' + item.paymentTypeCode] += item.amount;
-                    total['total_' + item.userId] += item.amount;
+                    total['total_' + item.paymentTypeCode] += amount;
+                    total['total_' + item.userId] += amount;
                 }
                 var $total = this.$html.find('.footer .cell_total');
                 $total.empty();
-                $total.append('总计金额:<span>' + total.total + '</span>');
+                $total.append('总计金额:<span>' + total.total / 100 + '</span>');
                 if (total.total > 0) {
                     for (var i = 0; i < PAYMENT_TYPE_LIST.length; i++) {
                         var item = PAYMENT_TYPE_LIST[i];
                         var value = total['total_' + item.code];
-                        value = value ? value : 0;
+                        value = value ? value / 100 : 0;
                         $total.append(item.name + ':<span>' + value + '</span>');
                     }
                     for (var i = 0; i < USER_LIST.length; i++) {
                         var item = USER_LIST[i];
                         var value = total['total_' + item.id];
-                        value = value ? value : 0;
+                        value = value ? value / 100 : 0;
                         $total.append(item.name + ':<span>' + value + '</span>');
                     }
                 }
