@@ -24,6 +24,7 @@ var PAYMENT_TYPE_LIST = [{ code: "CS", name: "现金" }, { code: "CC", name: "�
         }
     };
     */
+
     var accountService = {
         select: function (args, onsuccess) {
             var src = this;
