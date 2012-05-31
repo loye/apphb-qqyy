@@ -237,29 +237,7 @@ var PAYMENT_TYPE_LIST = [{ code: "CS", name: "现金" }, { code: "CC", name: "�
                     $view.show('slow');
 
                 } else if (action == 'save') {
-                    var item = {
-                        id: $cur.attr('data-id'),
-                        date: $cur.find('[name="date"]').val(),
-                        amount: $cur.find('[name="amount"]').val(),
-                        paymentTypeCode: $cur.find('[name="paymentType"]').val(),
-                        userId: $cur.find('[name="user"]').val(),
-                        comments: $cur.find('[name="comments"]').val()
-                    };
-                    // save insert or update
-                    var isInsert = item.id ? false : true;
-                    accountService.upsert.call(evt.data.list, { isInsert: isInsert, data: item }, function (src, data) {
-                        var account = data.data;
-                        if (!isInsert) {
-                            $cur.prev().remove();
-                        }
-                        var $view = createViewItem(account);
-                        $cur.before($view);
-                        $cur.hide('slow', function () {
-                            $cur.remove();
-                            $view.show('slow');
-                        });
-                        src.refreshTotal();
-                    });
+                    save(evt.data.list, $cur);
 
                 } else if (action == 'delete') {
                     if (window.confirm('确定要删除吗？')) {
@@ -276,10 +254,45 @@ var PAYMENT_TYPE_LIST = [{ code: "CS", name: "现金" }, { code: "CC", name: "�
                     }
                 }
             });
+
+            this.list.$html.on('keyup', 'li.edit', { list: this.list }, function (evt) {
+                if (evt.which == 13) {
+                    var $cur = $(this);
+                    save(evt.data.list, $cur);
+                }
+            });
+
             return this;
         }; // init end
 
         // private functions
+        function save(list, $cur)
+        {
+            var item = {
+                id: $cur.attr('data-id'),
+                date: $cur.find('[name="date"]').val(),
+                amount: $cur.find('[name="amount"]').val(),
+                paymentTypeCode: $cur.find('[name="paymentType"]').val(),
+                userId: $cur.find('[name="user"]').val(),
+                comments: $cur.find('[name="comments"]').val()
+            };
+            // save insert or update
+            var isInsert = item.id ? false : true;
+            accountService.upsert.call(list, { isInsert: isInsert, data: item }, function (src, data) {
+                var account = data.data;
+                if (!isInsert) {
+                    $cur.prev().remove();
+                }
+                var $view = createViewItem(account);
+                $cur.before($view);
+                $cur.hide('slow', function () {
+                    $cur.remove();
+                    $view.show('slow');
+                });
+                src.refreshTotal();
+            });
+        }
+
         function createViewItem(item) {
             var $html = $(
             '<li class="body" style="display:none" data-id="' + item.id + '">'
